@@ -5,6 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect } from "react";
 import { supabase } from "./lib/supabase";
 import { useAuthStore } from "./store/authStore";
+import { useUserStore } from "./store/userStore";
+import { useSubscriptionStore } from "./store/subscriptionStore";
+import { CountryDetector } from "@/components/CountryDetector";
 
 // Layouts
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
@@ -25,6 +28,8 @@ import Workflow from "@/pages/tools/workflow";
 import Projects from "@/pages/projects";
 import Settings from "@/pages/settings";
 import Onboarding from "@/pages/onboarding";
+import Pricing from "@/pages/pricing";
+import PaymentSuccess from "@/pages/payment-success";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +40,9 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/verify-email" component={VerifyEmail} />
-      
+      <Route path="/pricing" component={Pricing} />
+      <Route path="/payment/success" component={PaymentSuccess} />
+
       {/* Protected Routes */}
       <Route path="/onboarding">
         <ProtectedRoute><Onboarding /></ProtectedRoute>
@@ -75,11 +82,30 @@ function Router() {
 
 function App() {
   const { setSession, setUser } = useAuthStore();
+  const { syncFromProfile } = useUserStore();
+  const { loadSubscription, loadRates } = useSubscriptionStore();
+
+  useEffect(() => {
+    loadRates();
+  }, [loadRates]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user?.id) {
+        loadSubscription(session.user.id).then(() => {
+          // sync profile data into userStore
+          fetch(`/api/payments/subscription/${session.user.id}`)
+            .then((r) => r.json())
+            .then((json: { status: boolean; data?: { profile?: { plan?: string; credits?: number; xp?: number; level?: number; streak?: number } } }) => {
+              if (json.status && json.data?.profile) {
+                syncFromProfile(json.data.profile);
+              }
+            })
+            .catch(() => {});
+        });
+      }
     });
 
     const {
@@ -87,16 +113,20 @@ function App() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user?.id) {
+        loadSubscription(session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, [setSession, setUser]);
+  }, [setSession, setUser, loadSubscription, syncFromProfile]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <Router />
+          <CountryDetector />
         </WouterRouter>
         <Toaster />
       </TooltipProvider>

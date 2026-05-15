@@ -15,6 +15,8 @@ export const profilesTable = pgTable("profiles", {
   goals: jsonb("goals").$type<string[]>().default([]),
   contentStyle: text("content_style"),
   onboardingCompleted: integer("onboarding_completed").notNull().default(0),
+  preferredCurrency: text("preferred_currency").default("USD"),
+  preferredCountry: text("preferred_country").default("US"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
