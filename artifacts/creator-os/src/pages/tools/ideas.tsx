@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Sparkles, Zap, Flame, TrendingUp, ChevronRight } from "lucide-react";
+import { Loader2, Save, Sparkles, Zap, Flame, TrendingUp, ChevronRight, Lightbulb } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IdeaGeneratorInputPlatform, ContentIdea } from "@workspace/api-client-react/src/generated/api.schemas";
 import { supabase } from "@/lib/supabase";

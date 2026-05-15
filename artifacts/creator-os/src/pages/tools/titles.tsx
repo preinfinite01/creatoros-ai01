@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Copy, Save, Sparkles, Check, Zap } from "lucide-react";
+import { Loader2, Copy, Save, Sparkles, Check, Zap, PenTool } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TitleGeneratorInputPlatform } from "@workspace/api-client-react/src/generated/api.schemas";
 import { supabase } from "@/lib/supabase";

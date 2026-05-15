@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { useGenerateWorkflow } from "@workspace/api-client-react";
 import { useUserStore } from "@/store/userStore";
 import { useAuthStore } from "@/store/authStore";
@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { WorkflowInputPlatform } from "@workspace/api-client-react/src/generated/api.schemas";
 
 export default function Workflow() {
+  const search = useSearch();
   const [topic, setTopic] = useState("");
   const [niche, setNiche] = useState("");
   const [platform, setPlatform] = useState<WorkflowInputPlatform>("youtube");
@@ -29,6 +30,19 @@ export default function Workflow() {
   const { toast } = useToast();
   
   const generateWorkflow = useGenerateWorkflow();
+
+  // Pre-fill form from URL query params (e.g. when navigating from Ideas page)
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    const topicParam = params.get("topic");
+    const nicheParam = params.get("niche");
+    const platformParam = params.get("platform") as WorkflowInputPlatform | null;
+    if (topicParam) setTopic(topicParam);
+    if (nicheParam) setNiche(nicheParam);
+    if (platformParam && ["youtube", "tiktok", "instagram"].includes(platformParam)) {
+      setPlatform(platformParam);
+    }
+  }, [search]);
 
   const handleGenerate = () => {
     if (!topic) {

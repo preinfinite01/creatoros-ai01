@@ -33,10 +33,10 @@ export default function Signup() {
         description: error.message,
         variant: "destructive",
       });
-      setIsLoading(false);
     } else {
       setLocation("/verify-email");
     }
+    setIsLoading(false);
   };
 
   return (

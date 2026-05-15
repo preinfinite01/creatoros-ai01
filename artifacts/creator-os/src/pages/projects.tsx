@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useUserStore } from "@/store/userStore";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
@@ -10,19 +9,19 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 
-// Need to implement custom fetch for projects via Supabase since there's no api hook for it
 export default function Projects() {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   
-  // Basic local state to hold projects until we fetch them
   const [projects, setProjects] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch projects effect
-  useState(() => {
-    if (!user) return;
+  useEffect(() => {
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
     const fetchProjects = async () => {
       const { data, error } = await supabase
         .from('projects')
@@ -36,7 +35,7 @@ export default function Projects() {
       setIsLoading(false);
     };
     fetchProjects();
-  });
+  }, [user]);
 
   const deleteProject = async (id: string) => {
     if (!user) return;
