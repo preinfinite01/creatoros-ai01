@@ -132,14 +132,14 @@ export default function Landing() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link href="/login">
+            <a href="https://replit.com/login">
               <span className="hidden sm:block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Sign In</span>
-            </Link>
-            <Link href="/signup">
+            </a>
+            <a href="https://replit.com/signup">
               <Button className="bg-primary hover:bg-primary/90 text-white rounded-full px-5 h-9 text-sm font-semibold shadow-lg shadow-primary/25">
                 Start Free
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </header>
@@ -179,12 +179,12 @@ export default function Landing() {
             variants={fadeUp} initial="hidden" animate="show" transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14"
           >
-            <Link href="/signup">
+            <a href="https://replit.com/signup">
               <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-full px-9 h-14 text-base font-bold shadow-2xl shadow-primary/30 group">
                 Start Creating for Free
                 <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-            </Link>
+            </a>
             <a href="#tools">
               <Button size="lg" variant="ghost" className="rounded-full px-9 h-14 text-base border border-white/10 hover:bg-white/5">
                 <Play className="mr-2 w-4 h-4" /> Explore Tools
@@ -252,11 +252,11 @@ export default function Landing() {
             variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
             className="text-center mt-10"
           >
-            <Link href="/signup">
+            <a href="https://replit.com/signup">
               <Button className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 h-11">
                 Explore All Tools <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
-            </Link>
+            </a>
           </motion.div>
         </div>
       </section>
@@ -408,11 +408,11 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/signup">
+                <a href="https://replit.com/signup">
                   <Button className={`w-full ${plan.highlight ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-white/5 hover:bg-white/10 border border-white/10'}`}>
                     {plan.cta}
                   </Button>
-                </Link>
+                </a>
               </div>
             ))}
           </div>
@@ -473,12 +473,12 @@ export default function Landing() {
               <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto">
                 Join 47,000+ creators who use CreatorOS AI to produce more content, grow faster, and spend less time writing.
               </p>
-              <Link href="/signup">
+              <a href="https://replit.com/signup">
                 <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-full px-10 h-14 text-base font-bold shadow-2xl shadow-primary/30 group">
                   Start for Free — No Card Required
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
-              </Link>
+              </a>
             </div>
           </motion.div>
         </div>
@@ -497,8 +497,8 @@ export default function Landing() {
             <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
               <a href="#features" className="hover:text-foreground transition-colors">Features</a>
               <Link href="/pricing"><span className="hover:text-foreground transition-colors cursor-pointer">Pricing</span></Link>
-              <Link href="/login"><span className="hover:text-foreground transition-colors cursor-pointer">Sign In</span></Link>
-              <Link href="/signup"><span className="hover:text-foreground transition-colors cursor-pointer">Get Started</span></Link>
+              <a href="https://replit.com/login" className="hover:text-foreground transition-colors">Sign In</a>
+              <a href="https://replit.com/signup" className="hover:text-foreground transition-colors">Get Started</a>
             </div>
             <p className="text-sm text-muted-foreground/50">© {new Date().getFullYear()} CreatorOS AI. All rights reserved.</p>
           </div>

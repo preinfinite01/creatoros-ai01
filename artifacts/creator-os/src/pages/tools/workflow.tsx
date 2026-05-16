@@ -3,7 +3,7 @@ import { useLocation, useSearch } from "wouter";
 import { useGenerateWorkflow } from "@workspace/api-client-react";
 import { useUserStore } from "@/store/userStore";
 import { useAuthStore } from "@/store/authStore";
-import { supabase } from "@/lib/supabase";
+import { saveProject } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,14 +78,7 @@ export default function Workflow() {
   const saveToProjects = async () => {
     if (!user || !result) return;
     try {
-      await supabase.from('projects').insert({
-        user_id: user.id,
-        title: result.title || topic,
-        type: 'workflow',
-        content: result,
-        platform,
-        niche
-      });
+      await saveProject(user.id, { title: result.title || topic, type: 'workflow', content: result, platform, niche });
       toast({ title: "Saved complete workflow to projects" });
     } catch (e) {
       toast({ title: "Failed to save project", variant: "destructive" });

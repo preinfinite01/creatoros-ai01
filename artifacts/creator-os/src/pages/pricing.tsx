@@ -114,7 +114,7 @@ export default function Pricing() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user.id,
-          email: user.email,
+          email: user.name,
           plan: plan.key,
           billingCycle,
           currency,

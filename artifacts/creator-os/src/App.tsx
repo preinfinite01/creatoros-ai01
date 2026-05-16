@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect, lazy, Suspense } from "react";
-import { supabase } from "./lib/supabase";
 import { useAuthStore } from "./store/authStore";
 import { useUserStore } from "./store/userStore";
 import { useSubscriptionStore } from "./store/subscriptionStore";
@@ -16,9 +15,6 @@ import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 
 // Eagerly loaded (critical path)
 import Landing from "@/pages/landing";
-import Login from "@/pages/auth/login";
-import Signup from "@/pages/auth/signup";
-import VerifyEmail from "@/pages/auth/verify-email";
 import NotFound from "@/pages/not-found";
 
 // Lazily loaded (post-login routes)
@@ -70,9 +66,6 @@ function Router() {
       <Switch>
         {/* Public */}
         <Route path="/" component={Landing} />
-        <Route path="/login" component={Login} />
-        <Route path="/signup" component={Signup} />
-        <Route path="/verify-email" component={VerifyEmail} />
         <Route path="/pricing"><Suspense fallback={<PageLoader />}><Pricing /></Suspense></Route>
         <Route path="/payment/success"><Suspense fallback={<PageLoader />}><PaymentSuccess /></Suspense></Route>
 
@@ -145,7 +138,7 @@ function Router() {
 }
 
 function App() {
-  const { setSession, setUser } = useAuthStore();
+  const { initialize, user } = useAuthStore();
   const { syncFromProfile } = useUserStore();
   const { loadSubscription, loadRates } = useSubscriptionStore();
 
@@ -154,33 +147,23 @@ function App() {
   }, [loadRates]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user?.id) {
-        loadSubscription(session.user.id).then(() => {
-          fetch(`/api/payments/subscription/${session.user.id}`)
-            .then((r) => r.json())
-            .then((json: { status: boolean; data?: { profile?: { plan?: string; credits?: number; xp?: number; level?: number; streak?: number } } }) => {
-              if (json.status && json.data?.profile) {
-                syncFromProfile(json.data.profile);
-              }
-            })
-            .catch(() => {});
-        });
-      }
-    });
+    initialize().then(() => {});
+  }, [initialize]);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user?.id) {
-        loadSubscription(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [setSession, setUser, loadSubscription, syncFromProfile]);
+  useEffect(() => {
+    if (user?.id) {
+      loadSubscription(user.id).then(() => {
+        fetch(`/api/payments/subscription/${user.id}`)
+          .then((r) => r.json())
+          .then((json: { status: boolean; data?: { profile?: { plan?: string; credits?: number; xp?: number; level?: number; streak?: number } } }) => {
+            if (json.status && json.data?.profile) {
+              syncFromProfile(json.data.profile);
+            }
+          })
+          .catch(() => {});
+      });
+    }
+  }, [user?.id, loadSubscription, syncFromProfile]);
 
   return (
     <QueryClientProvider client={queryClient}>

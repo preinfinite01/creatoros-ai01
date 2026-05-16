@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
-import { supabase } from "@/lib/supabase";
+import { fetchProjects, deleteProject as deleteProjectApi } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,25 +22,16 @@ export default function Projects() {
       setIsLoading(false);
       return;
     }
-    const fetchProjects = async () => {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-        
-      if (!error && data) {
-        setProjects(data);
-      }
-      setIsLoading(false);
-    };
-    fetchProjects();
+    fetchProjects(user.id)
+      .then((data) => setProjects(data as any[]))
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
   }, [user]);
 
-  const deleteProject = async (id: string) => {
+  const deleteProject = async (id: string | number) => {
     if (!user) return;
     try {
-      await supabase.from('projects').delete().eq('id', id);
+      await deleteProjectApi(id, user.id);
       setProjects(projects.filter(p => p.id !== id));
       toast({ title: "Project deleted" });
     } catch (e) {

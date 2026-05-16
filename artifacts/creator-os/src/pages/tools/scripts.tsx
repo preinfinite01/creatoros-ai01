@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useUserStore } from "@/store/userStore";
 import { useAuthStore } from "@/store/authStore";
-import { supabase } from "@/lib/supabase";
+import { saveProject } from "@/lib/api";
 import { useGenerateScript } from "@workspace/api-client-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -73,13 +73,7 @@ export default function Scripts() {
   const saveToProjects = async () => {
     if (!user || !result) return;
     try {
-      await supabase.from('projects').insert({
-        user_id: user.id,
-        title: topic,
-        type: 'script',
-        content: result,
-        platform,
-      });
+      await saveProject(user.id, { title: topic, type: 'script', content: result, platform });
       toast({ title: "Saved to projects" });
     } catch (e) {
       toast({ title: "Failed to save project", variant: "destructive" });
