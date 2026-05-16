@@ -8,6 +8,7 @@ import { useAuthStore } from "./store/authStore";
 import { useUserStore } from "./store/userStore";
 import { useSubscriptionStore } from "./store/subscriptionStore";
 import { CountryDetector } from "@/components/CountryDetector";
+import { GenerationAdModal } from "@/components/ads/GenerationAdModal";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Layouts
@@ -187,6 +188,7 @@ function App() {
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <Router />
           <CountryDetector />
+          <GenerationAdModal />
         </WouterRouter>
         <Toaster />
       </TooltipProvider>

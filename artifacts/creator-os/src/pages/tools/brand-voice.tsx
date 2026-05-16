@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useUserStore } from "@/store/userStore";
+import { useAdTrigger } from "@/hooks/useAdTrigger";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ export default function BrandVoice() {
   const [isLoading, setIsLoading] = useState(false);
 
   const { deductCredits, addXp } = useUserStore();
+  const { triggerPostGenAd } = useAdTrigger();
   const { toast } = useToast();
 
   const handleGenerate = async () => {
@@ -47,6 +49,7 @@ export default function BrandVoice() {
       setResult(data);
       addXp(15);
       toast({ title: "Brand voice generated!" });
+      triggerPostGenAd();
     } catch (err) {
       toast({ title: "Generation failed", description: String(err), variant: "destructive" });
     } finally {

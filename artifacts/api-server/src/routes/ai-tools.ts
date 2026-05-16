@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { openai } from "@workspace/integrations-openai-ai-server";
+import { generateImageBuffer } from "@workspace/integrations-openai-ai-server/image";
 import {
   GenerateTitlesBody,
   GenerateHooksBody,
@@ -332,34 +333,37 @@ router.post("/ai/generate-image", async (req, res) => {
   };
   if (!prompt) { res.status(400).json({ error: "prompt required" }); return; }
 
-  const sizeMap: Record<string, "1024x1024" | "1792x1024" | "1024x1792"> = {
-    "16:9": "1792x1024",
-    "9:16": "1024x1792",
+  // gpt-image-1 supported sizes: 1024x1024, 1536x1024 (landscape), 1024x1536 (portrait)
+  const sizeMap: Record<string, "1024x1024" | "1536x1024" | "1024x1536"> = {
+    "16:9": "1536x1024",
+    "9:16": "1024x1536",
     "1:1": "1024x1024",
   };
-  const size = sizeMap[aspectRatio] ?? "1792x1024";
+  const size = sizeMap[aspectRatio] ?? "1536x1024";
 
-  const enhancedPrompt = `${prompt}. Style: ${style}. Ultra high quality, professional photography, sharp details, cinematic lighting.`;
+  // Build an enhanced, Midjourney-style prompt for higher quality
+  const styleDirectives: Record<string, string> = {
+    "photorealistic": "hyperrealistic photography, 8K resolution, professional camera, perfect exposure, sharp focus, cinematic depth of field",
+    "cinematic": "cinematic film still, anamorphic lens, movie lighting, dramatic composition, color graded, blockbuster quality",
+    "digital art": "digital illustration, concept art, highly detailed, trending on ArtStation, vibrant colors, professional artist",
+    "oil painting": "oil on canvas, masterful brushwork, rich textures, gallery quality, impressionist lighting",
+    "minimalist": "clean minimalist design, negative space, geometric precision, modern aesthetic, premium product photography",
+    "anime": "anime art style, studio quality, expressive, detailed background, vibrant, professional manga artist",
+    "watercolor": "watercolor painting, soft washes, professional illustration, artistic textures, beautiful color bleeding",
+    "dark fantasy": "dark fantasy concept art, dramatic lighting, epic atmosphere, intricate details, cinematic, ArtStation featured",
+    "studio photo": "professional studio photography, perfect lighting setup, clean background, commercial quality, editorial style",
+  };
+
+  const styleDesc = styleDirectives[style] ?? styleDirectives["photorealistic"];
+  const enhancedPrompt = `${prompt}. ${styleDesc}. No text, no watermarks, no artifacts, ultra high quality.`;
 
   try {
-    const imageResponse = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: enhancedPrompt,
-      n: 1,
-      size,
-      quality: quality === "hd" ? "hd" : "standard",
-    });
-
-    const imageUrl = imageResponse.data[0]?.url;
-    if (!imageUrl) {
-      res.status(500).json({ error: "No image URL returned" });
-      return;
-    }
-
-    res.json({ imageUrl, revisedPrompt: imageResponse.data[0]?.revised_prompt, creditsUsed: 15 });
+    const buffer = await generateImageBuffer(enhancedPrompt, size);
+    const b64_json = buffer.toString("base64");
+    res.json({ b64_json, creditsUsed: 15 });
   } catch (err) {
     req.log.error({ err }, "Error generating image");
-    res.status(500).json({ error: "Failed to generate image" });
+    res.status(500).json({ error: "Failed to generate image. Please try again." });
   }
 });
 

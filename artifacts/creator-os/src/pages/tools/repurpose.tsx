@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useUserStore } from "@/store/userStore";
+import { useAdTrigger } from "@/hooks/useAdTrigger";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -39,6 +40,7 @@ export default function Repurpose() {
   const [isLoading, setIsLoading] = useState(false);
 
   const { deductCredits, addXp } = useUserStore();
+  const { triggerPostGenAd } = useAdTrigger();
   const { toast } = useToast();
 
   const togglePlatform = (p: string) => {
@@ -64,6 +66,7 @@ export default function Repurpose() {
       setResults(data.repurposed ?? []);
       addXp(20);
       toast({ title: "Content repurposed!" });
+      triggerPostGenAd();
     } catch (err) {
       toast({ title: "Generation failed", description: String(err), variant: "destructive" });
     } finally {

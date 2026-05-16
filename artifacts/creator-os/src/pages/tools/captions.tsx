@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useUserStore } from "@/store/userStore";
 import { useAuthStore } from "@/store/authStore";
+import { useAdTrigger } from "@/hooks/useAdTrigger";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ export default function Captions() {
 
   const { deductCredits, addXp } = useUserStore();
   const { user } = useAuthStore();
+  const { triggerPostGenAd } = useAdTrigger();
   const { toast } = useToast();
 
   const handleGenerate = async () => {
@@ -47,6 +49,7 @@ export default function Captions() {
       setResults(data.captions ?? []);
       addXp(10);
       toast({ title: "Captions generated!" });
+      triggerPostGenAd();
     } catch (err) {
       toast({ title: "Generation failed", description: String(err), variant: "destructive" });
     } finally {

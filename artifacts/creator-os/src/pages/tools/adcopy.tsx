@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useUserStore } from "@/store/userStore";
+import { useAdTrigger } from "@/hooks/useAdTrigger";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ export default function AdCopy() {
   const [isLoading, setIsLoading] = useState(false);
 
   const { deductCredits, addXp } = useUserStore();
+  const { triggerPostGenAd } = useAdTrigger();
   const { toast } = useToast();
 
   const handleGenerate = async () => {
@@ -46,6 +48,7 @@ export default function AdCopy() {
       setResults(data.ads ?? []);
       addXp(15);
       toast({ title: "Ad copy generated!" });
+      triggerPostGenAd();
     } catch (err) {
       toast({ title: "Generation failed", description: String(err), variant: "destructive" });
     } finally {
