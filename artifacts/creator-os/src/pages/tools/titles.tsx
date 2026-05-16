@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Copy, Save, Sparkles, Check, Zap, PenTool } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TitleGeneratorInputPlatform } from "@workspace/api-client-react/src/generated/api.schemas";
-import { saveProject } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/store/authStore";
 
 export default function Titles() {
@@ -69,7 +69,14 @@ export default function Titles() {
   const saveToProjects = async (titleStr: string) => {
     if (!user) return;
     try {
-      await saveProject(user.id, { title: titleStr, type: 'title', content: { title: titleStr }, platform, niche });
+      await supabase.from('projects').insert({
+        user_id: user.id,
+        title: titleStr,
+        type: 'title',
+        content: { title: titleStr },
+        platform,
+        niche
+      });
       toast({ title: "Saved to projects" });
     } catch (e) {
       toast({ title: "Failed to save project", variant: "destructive" });

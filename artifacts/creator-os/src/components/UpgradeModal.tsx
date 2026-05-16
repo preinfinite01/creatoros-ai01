@@ -54,7 +54,7 @@ export function UpgradeModal({ open, onOpenChange }: { open: boolean; onOpenChan
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user.id,
-          email: user.name,
+          email: user.email,
           plan: planKey,
           billingCycle,
           currency,

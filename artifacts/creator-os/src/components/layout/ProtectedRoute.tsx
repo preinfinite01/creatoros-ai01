@@ -1,9 +1,18 @@
 import { useAuthStore } from "@/store/authStore";
+import { useLocation } from "wouter";
+import { useEffect } from "react";
 import { AppLayout } from "./AppLayout";
 import { Loader2 } from "lucide-react";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuthStore();
+  const { session, isLoading } = useAuthStore();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && !session) {
+      setLocation("/login");
+    }
+  }, [session, isLoading, setLocation]);
 
   if (isLoading) {
     return (
@@ -13,9 +22,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
-    window.location.href = `https://replit.com/login?goto=${encodeURIComponent(window.location.href)}`;
-    return null;
+  if (!session) {
+    return null; // Will redirect in useEffect
   }
 
   return <AppLayout>{children}</AppLayout>;

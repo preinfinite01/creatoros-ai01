@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Copy, Save, Sparkles, Check, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HookGeneratorInputPlatform } from "@workspace/api-client-react/src/generated/api.schemas";
-import { saveProject } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/store/authStore";
 
 export default function Hooks() {
@@ -69,7 +69,14 @@ export default function Hooks() {
   const saveToProjects = async (hookStr: string) => {
     if (!user) return;
     try {
-      await saveProject(user.id, { title: hookStr.substring(0, 40) + '...', type: 'hook', content: { hook: hookStr }, platform, niche });
+      await supabase.from('projects').insert({
+        user_id: user.id,
+        title: hookStr.substring(0, 40) + '...',
+        type: 'hook',
+        content: { hook: hookStr },
+        platform,
+        niche
+      });
       toast({ title: "Saved to projects" });
     } catch (e) {
       toast({ title: "Failed to save project", variant: "destructive" });

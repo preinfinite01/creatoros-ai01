@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Sparkles, Zap, Flame, TrendingUp, ChevronRight, Lightbulb } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IdeaGeneratorInputPlatform, ContentIdea } from "@workspace/api-client-react/src/generated/api.schemas";
-import { saveProject } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/store/authStore";
 import { Link } from "wouter";
 
@@ -61,7 +61,14 @@ export default function Ideas() {
   const saveToProjects = async (idea: ContentIdea) => {
     if (!user) return;
     try {
-      await saveProject(user.id, { title: idea.title, type: 'idea', content: idea as Record<string, unknown>, platform, niche });
+      await supabase.from('projects').insert({
+        user_id: user.id,
+        title: idea.title,
+        type: 'idea',
+        content: idea,
+        platform,
+        niche
+      });
       toast({ title: "Saved to projects" });
     } catch (e) {
       toast({ title: "Failed to save project", variant: "destructive" });

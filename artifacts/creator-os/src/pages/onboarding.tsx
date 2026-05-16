@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ArrowRight, Zap, Target, PenTool, Layout } from "lucide-react";
-import { upsertProfile } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/store/authStore";
 
 const steps = [
@@ -42,19 +42,14 @@ export default function Onboarding() {
   const handleComplete = async () => {
     setIsSubmitting(true);
     if (user) {
-      try {
-        await upsertProfile({
-          id: user.id,
-          email: user.name,
-          niche,
-          platforms: selectedPlatforms,
-          goals: selectedGoals,
-          content_style: style,
-          onboarding_completed: true,
-        });
-      } catch {
-        // Continue even if profile update fails
-      }
+      await supabase.from('profiles').upsert({
+        id: user.id,
+        niche,
+        platforms: selectedPlatforms,
+        goals: selectedGoals,
+        content_style: style,
+        onboarding_completed: true
+      });
     }
     setIsSubmitting(false);
     setLocation("/dashboard");

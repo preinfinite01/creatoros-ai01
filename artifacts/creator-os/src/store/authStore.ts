@@ -1,25 +1,24 @@
 import { create } from 'zustand'
-import { getReplitUser, type ReplitUser } from '../lib/auth'
+import { Session, User } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
 
 interface AuthState {
-  user: ReplitUser | null
+  user: User | null
+  session: Session | null
   isLoading: boolean
-  setUser: (user: ReplitUser | null) => void
+  setUser: (user: User | null) => void
+  setSession: (session: Session | null) => void
   signOut: () => Promise<void>
-  initialize: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
+  session: null,
   isLoading: true,
   setUser: (user) => set({ user }),
+  setSession: (session) => set({ session, isLoading: false }),
   signOut: async () => {
-    await fetch('/__replauth', { method: 'POST' });
-    set({ user: null });
-    window.location.href = '/';
-  },
-  initialize: async () => {
-    const user = await getReplitUser();
-    set({ user, isLoading: false });
-  },
+    await supabase.auth.signOut()
+    set({ user: null, session: null })
+  }
 }))

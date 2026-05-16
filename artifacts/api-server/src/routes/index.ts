@@ -3,7 +3,6 @@ import healthRouter from "./health";
 import aiToolsRouter from "./ai-tools";
 import openaiConversationsRouter from "./openai-conversations";
 import paystackRouter from "./paystack";
-import userRouter from "./user";
 
 const router: IRouter = Router();
 
@@ -11,6 +10,5 @@ router.use(healthRouter);
 router.use(aiToolsRouter);
 router.use(openaiConversationsRouter);
 router.use(paystackRouter);
-router.use(userRouter);
 
 export default router;
