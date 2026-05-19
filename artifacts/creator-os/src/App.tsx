@@ -42,6 +42,11 @@ const Settings = lazy(() => import("@/pages/settings"));
 const Onboarding = lazy(() => import("@/pages/onboarding"));
 const Pricing = lazy(() => import("@/pages/pricing"));
 const PaymentSuccess = lazy(() => import("@/pages/payment-success"));
+const Terms = lazy(() => import("@/pages/legal/terms"));
+const Privacy = lazy(() => import("@/pages/legal/privacy"));
+const RefundPolicy = lazy(() => import("@/pages/legal/refund-policy"));
+const AcceptableUse = lazy(() => import("@/pages/legal/acceptable-use"));
+const Cookies = lazy(() => import("@/pages/legal/cookies"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +80,11 @@ function Router() {
         <Route path="/verify-email" component={VerifyEmail} />
         <Route path="/pricing"><Suspense fallback={<PageLoader />}><Pricing /></Suspense></Route>
         <Route path="/payment/success"><Suspense fallback={<PageLoader />}><PaymentSuccess /></Suspense></Route>
+        <Route path="/terms"><Suspense fallback={<PageLoader />}><Terms /></Suspense></Route>
+        <Route path="/privacy"><Suspense fallback={<PageLoader />}><Privacy /></Suspense></Route>
+        <Route path="/refund-policy"><Suspense fallback={<PageLoader />}><RefundPolicy /></Suspense></Route>
+        <Route path="/acceptable-use"><Suspense fallback={<PageLoader />}><AcceptableUse /></Suspense></Route>
+        <Route path="/cookies"><Suspense fallback={<PageLoader />}><Cookies /></Suspense></Route>
 
         {/* Protected */}
         <Route path="/onboarding">

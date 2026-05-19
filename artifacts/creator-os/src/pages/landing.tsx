@@ -485,22 +485,53 @@ export default function Landing() {
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────── */}
-      <footer className="border-t border-white/5 px-6 py-12">
+      <footer className="border-t border-white/5 px-6 py-14">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-                <Zap className="w-4 h-4 text-white" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
+                  <Zap className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-bold text-lg tracking-tight">CreatorOS <span className="text-gradient-primary font-black">AI</span></span>
               </div>
-              <span className="font-bold text-lg tracking-tight">CreatorOS <span className="text-gradient-primary font-black">AI</span></span>
+              <p className="text-sm text-muted-foreground/70 max-w-xs">The AI operating system for world-class content creators.</p>
             </div>
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
-              <a href="#features" className="hover:text-foreground transition-colors">Features</a>
-              <Link href="/pricing"><span className="hover:text-foreground transition-colors cursor-pointer">Pricing</span></Link>
-              <Link href="/login"><span className="hover:text-foreground transition-colors cursor-pointer">Sign In</span></Link>
-              <Link href="/signup"><span className="hover:text-foreground transition-colors cursor-pointer">Get Started</span></Link>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/50 mb-3">Product</p>
+              <div className="space-y-2">
+                <a href="#features" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
+                <Link href="/pricing"><span className="block text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Pricing</span></Link>
+                <Link href="/login"><span className="block text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Sign In</span></Link>
+                <Link href="/signup"><span className="block text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Get Started</span></Link>
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground/50">© {new Date().getFullYear()} CreatorOS AI. All rights reserved.</p>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/50 mb-3">Legal</p>
+              <div className="space-y-2">
+                <Link href="/terms"><span className="block text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Terms of Service</span></Link>
+                <Link href="/privacy"><span className="block text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Privacy Policy</span></Link>
+                <Link href="/refund-policy"><span className="block text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Refund Policy</span></Link>
+                <Link href="/acceptable-use"><span className="block text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Acceptable Use</span></Link>
+                <Link href="/cookies"><span className="block text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Cookie Policy</span></Link>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/50 mb-3">Support</p>
+              <div className="space-y-2">
+                <a href="mailto:support@creatorosai.com" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Contact Support</a>
+                <a href="mailto:billing@creatorosai.com" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Billing</a>
+                <a href="mailto:trust@creatorosai.com" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Trust & Safety</a>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-white/5 pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground/40">© {new Date().getFullYear()} CreatorOS AI. All rights reserved.</p>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground/40">
+              <Link href="/privacy"><span className="hover:text-muted-foreground transition-colors cursor-pointer">Privacy</span></Link>
+              <Link href="/terms"><span className="hover:text-muted-foreground transition-colors cursor-pointer">Terms</span></Link>
+              <Link href="/cookies"><span className="hover:text-muted-foreground transition-colors cursor-pointer">Cookies</span></Link>
+            </div>
           </div>
         </div>
       </footer>

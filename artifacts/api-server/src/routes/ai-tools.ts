@@ -8,22 +8,37 @@ import {
   GenerateIdeasBody,
   GenerateWorkflowBody,
 } from "@workspace/api-zod";
+import { aiGenerationLimiter } from "../middleware/rateLimit";
 
 const router = Router();
 
 // ── Titles ────────────────────────────────────────────────────
-router.post("/ai/generate-titles", async (req, res) => {
+router.post("/ai/generate-titles", aiGenerationLimiter, async (req, res) => {
   const parsed = GenerateTitlesBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { topic, niche, platform, tone, count = 5 } = parsed.data;
+
+  const platformContext: Record<string, string> = {
+    youtube: "YouTube (SEO-heavy, 60-70 chars ideal, curiosity-driven, high-search-volume keywords)",
+    tiktok: "TikTok (pattern-interrupt first word, trend-aware, conversational, urgency-driven)",
+    instagram: "Instagram Reels (emotionally resonant, aspirational, identity-driven, share-worthy)",
+    linkedin: "LinkedIn (authority-positioning, insight-driven, professional value, career-relevant)",
+    youtube_shorts: "YouTube Shorts (ultra-punchy, first 3 words carry all weight, mobile-first)",
+  };
 
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-5.4",
       max_completion_tokens: 1024,
       messages: [
-        { role: "system", content: `You are a viral content strategist who creates scroll-stopping video titles optimized for ${platform}. You understand retention psychology, curiosity gaps, and platform-specific algorithms.` },
-        { role: "user", content: `Generate ${count} viral video titles for:\nTopic: ${topic}\nNiche: ${niche || "general"}\nPlatform: ${platform}\nTone: ${tone || "engaging and energetic"}\n\nRequirements:\n- Attention-grabbing and click-worthy\n- Use proven formulas (numbers, questions, power words, curiosity gaps)\n- Platform-optimized\n- Each title uses a different approach\n\nReturn ONLY JSON: {"titles": ["title1", "title2", ...]}` },
+        {
+          role: "system",
+          content: `You are an elite viral content strategist who has studied every high-performing video across the internet. You understand the exact psychological mechanisms — curiosity gaps, identity triggers, loss aversion, social proof, controversy, and specificity — that make titles irresistible to click. You write titles that feel HUMAN, not AI-generated. Every title you produce could legitimately hit 1M+ views. You never use generic phrases like "game-changing" or "revolutionary". Platform context: ${platformContext[platform] ?? platform}.`
+        },
+        {
+          role: "user",
+          content: `Generate ${count} high-performing video titles for:\nTopic: ${topic}\nNiche: ${niche || "general"}\nPlatform: ${platform}\nTone/Style: ${tone || "engaging and direct"}\n\nRules:\n- Each title MUST use a different psychological formula (curiosity gap, specific number, contrarian take, story hook, transformation promise, social proof angle, urgency, identity statement)\n- Zero generic words: no "game-changing", "ultimate", "amazing", "incredible"\n- Be specific — specificity creates credibility and click-worthiness\n- Write like a top creator in this niche would, not like a content marketing template\n- Each title stands completely alone — no series or part numbers\n\nReturn ONLY valid JSON: {"titles": ["title1", "title2", ...]}`
+        },
       ],
     });
     const content = completion.choices[0]?.message?.content ?? "{}";
@@ -32,12 +47,12 @@ router.post("/ai/generate-titles", async (req, res) => {
     res.json({ titles, creditsUsed: 5 });
   } catch (err) {
     req.log.error({ err }, "Error generating titles");
-    res.status(500).json({ error: "Failed to generate titles" });
+    res.status(500).json({ error: "Failed to generate titles. Please try again." });
   }
 });
 
 // ── Hooks ─────────────────────────────────────────────────────
-router.post("/ai/generate-hooks", async (req, res) => {
+router.post("/ai/generate-hooks", aiGenerationLimiter, async (req, res) => {
   const parsed = GenerateHooksBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { topic, niche, platform, tone, count = 5 } = parsed.data;
@@ -47,8 +62,14 @@ router.post("/ai/generate-hooks", async (req, res) => {
       model: "gpt-5.4",
       max_completion_tokens: 1024,
       messages: [
-        { role: "system", content: `You are a master content creator specializing in the perfect first 3 seconds of ${platform} videos. You understand pattern interrupts, emotional triggers, and retention mechanics.` },
-        { role: "user", content: `Generate ${count} powerful hooks for a ${platform} video about:\nTopic: ${topic}\nNiche: ${niche || "general"}\nTone: ${tone || "bold and direct"}\n\nHook rules:\n- Grab attention in the FIRST sentence\n- Pattern interrupts, bold statements, or provocative questions\n- 1-3 sentences max, punchy and direct\n- Each uses a different psychological approach\n\nReturn ONLY JSON: {"hooks": ["hook1", "hook2", ...]}` },
+        {
+          role: "system",
+          content: `You are the world's foremost expert on the first 3 seconds of short-form video. You have reverse-engineered why millions of videos go viral and what makes 90%+ of viewers stay past the first 3 seconds. You know that the hook is not an introduction — it is a psychological trap. You write hooks that exploit curiosity gaps, trigger identity, create discomfort, make bold claims, or promise immediate value. Each hook you write feels like it came from a top creator with 10M+ followers, not a content template. Platform: ${platform}.`
+        },
+        {
+          role: "user",
+          content: `Write ${count} elite-level video hooks for:\nTopic: ${topic}\nNiche: ${niche || "general"}\nTone: ${tone || "bold and direct"}\n\nEach hook must:\n- Be 1-2 sentences maximum — every word earns its place\n- Trigger an immediate psychological response (curiosity, shock, identity, desire, fear of missing out, controversy)\n- Feel completely different from the others in structure and mechanism\n- Start with a strong action word OR a disruptive question OR a bold claim — never "Are you..." or "Have you ever..."\n- Sound like a real human talking, not corporate content\n\nHook types to vary across: Pattern Interrupt, Bold Claim, Contrarian Statement, Specific Story Opener, Shocking Statistic, Identity Trigger, Problem Agitation, Secret Reveal\n\nReturn ONLY valid JSON: {"hooks": ["hook1", "hook2", ...]}`
+        },
       ],
     });
     const content = completion.choices[0]?.message?.content ?? "{}";
@@ -57,12 +78,12 @@ router.post("/ai/generate-hooks", async (req, res) => {
     res.json({ hooks, creditsUsed: 5 });
   } catch (err) {
     req.log.error({ err }, "Error generating hooks");
-    res.status(500).json({ error: "Failed to generate hooks" });
+    res.status(500).json({ error: "Failed to generate hooks. Please try again." });
   }
 });
 
 // ── Script ────────────────────────────────────────────────────
-router.post("/ai/generate-script", async (req, res) => {
+router.post("/ai/generate-script", aiGenerationLimiter, async (req, res) => {
   const parsed = GenerateScriptBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { topic, niche, platform, tone, duration, hook, title } = parsed.data;
@@ -73,13 +94,27 @@ router.post("/ai/generate-script", async (req, res) => {
     long: "5-10 minutes (900-1800 words)",
   };
 
+  const platformVoice: Record<string, string> = {
+    tiktok: "Conversational, fast-paced, Gen-Z aware, trend-literate, intimate — like you're talking to one person. No intros. Cut to the point immediately. Use pattern interrupts every 8-10 seconds.",
+    youtube: "Cinematic storytelling, strong narrative arc, emotional payoffs, strategic retention loops, direct address. Can breathe more. Build curiosity layers. Payoff feels earned.",
+    instagram: "Emotionally resonant, identity-driven, aspirational but relatable. Stories feel personal. Visual-first — describe what viewers will see. Shareable insights.",
+    linkedin: "Authoritative, insight-dense, story-backed, professional value. Contrarian but respectful. Data points strengthen points. Ends with a thought-provoking question.",
+    youtube_shorts: "Ultra-distilled. Every sentence is its own beat. High-energy. Designed to loop. Hook must work as both opener and closer.",
+  };
+
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-5.4",
       max_completion_tokens: 4096,
       messages: [
-        { role: "system", content: `You are a professional scriptwriter for ${platform} content. You write scripts with perfect pacing, emotional beats, pattern interrupts, and CTAs that maximize watch time.` },
-        { role: "user", content: `Write a complete ${durationMap[duration]} script for:\nTopic: ${topic}\nNiche: ${niche || "general"}\nPlatform: ${platform}\nTone: ${tone || "engaging and authentic"}\n${hook ? `Opening Hook: ${hook}` : ""}\n${title ? `Video Title: ${title}` : ""}\n\nStructure: Hook → Problem/Intrigue → Value → Pattern Interrupt → More Value → CTA\nInclude [VISUAL CUE] tags for key moments.\n\nReturn ONLY JSON: {"script": "full script", "hook": "opening hook", "cta": "call to action", "estimatedDuration": "time estimate"}` },
+        {
+          role: "system",
+          content: `You are a Hollywood-trained scriptwriter who crossed over into digital content. You've written scripts for creators with combined audiences of 500M+. You understand that retention is an emotion — not a technique. You build scripts with cinematic pacing, unexpected turns, emotional momentum, and pattern interrupts woven naturally into the narrative. Every line serves a purpose: either advancing the story, delivering value, building suspense, or landing an emotional beat. Platform voice guide: ${platformVoice[platform] ?? platform}. Your scripts never sound like AI — they sound like the creator's best version of themselves.`
+        },
+        {
+          role: "user",
+          content: `Write a complete ${durationMap[duration]} script for:\nTopic: ${topic}\nNiche: ${niche || "general"}\nPlatform: ${platform}\nTone: ${tone || "authentic and engaging"}\n${hook ? `Use this opening hook: "${hook}"` : ""}\n${title ? `Video title: "${title}"` : ""}\n\nScript architecture:\n1. HOOK (first 3 seconds — no intro, zero throat-clearing)\n2. SETUP (establish the tension, question, or promise)\n3. CONTENT DELIVERY (value in escalating layers — each beat better than the last)\n4. PATTERN INTERRUPT (unexpected angle, story pivot, or perspective shift mid-script)\n5. CLIMAX (the most valuable or surprising insight)\n6. CTA (feels earned, not bolted-on — one clear action)\n\nFormatting rules:\n- Use [VISUAL CUE: description] sparingly for key visual moments\n- Use [PAUSE] for deliberate beat moments\n- Write in spoken language — contractions, short sentences, rhetorical questions\n- No bullet-point lists in the delivered speech\n\nReturn ONLY valid JSON: {"script": "full formatted script text", "hook": "the opening hook line", "cta": "the closing call to action", "estimatedDuration": "realistic spoken time estimate"}`
+        },
       ],
     });
     const content = completion.choices[0]?.message?.content ?? "{}";
@@ -88,12 +123,12 @@ router.post("/ai/generate-script", async (req, res) => {
     res.json({ ...result, creditsUsed: 20 });
   } catch (err) {
     req.log.error({ err }, "Error generating script");
-    res.status(500).json({ error: "Failed to generate script" });
+    res.status(500).json({ error: "Failed to generate script. Please try again." });
   }
 });
 
 // ── Ideas ─────────────────────────────────────────────────────
-router.post("/ai/generate-ideas", async (req, res) => {
+router.post("/ai/generate-ideas", aiGenerationLimiter, async (req, res) => {
   const parsed = GenerateIdeasBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { niche, platform, tone, count = 8 } = parsed.data;
@@ -103,8 +138,14 @@ router.post("/ai/generate-ideas", async (req, res) => {
       model: "gpt-5.4",
       max_completion_tokens: 2048,
       messages: [
-        { role: "system", content: `You are a viral content strategist with deep knowledge of trending topics and audience psychology for ${platform}.` },
-        { role: "user", content: `Generate ${count} high-potential content ideas for a ${platform} creator in the ${niche} niche.\nTone: ${tone || "authentic and engaging"}\n\nFor each idea provide: title, description (2 sentences), viral potential (high/medium/low), and 3-5 relevant tags.\n\nReturn ONLY JSON: {"ideas": [{"title":"","description":"","viralPotential":"high|medium|low","tags":["tag1"]}]}` },
+        {
+          role: "system",
+          content: `You are a viral content intelligence system trained on the DNA of every breakout creator in the past 5 years. You understand that great content ideas sit at the intersection of: (1) what audiences desperately want but nobody is saying, (2) what's trending but not yet oversaturated, and (3) what uniquely positions the creator's perspective. You think in terms of shareability, identity resonance, emotional charge, and narrative potential. You never suggest generic "how-to" or "top 10" ideas. Every idea you generate has a specific, fresh angle that makes it stand out in a saturated niche.`
+        },
+        {
+          role: "user",
+          content: `Generate ${count} standout content ideas for a ${platform} creator in the ${niche} niche.\nTone: ${tone || "authentic and engaging"}\n\nFor each idea, provide:\n- title: A specific, compelling title (not a template — a real, publishable title)\n- description: 2 punchy sentences describing the angle and why it works\n- viralPotential: "high", "medium", or "low" with honest reasoning built into the description\n- tags: 3-5 specific, relevant tags (not generic ones like "content" or "tips")\n\nIdea variety: Mix different formats (personal story, data-driven, contrarian take, deep-dive, challenge, case study, reaction, prediction). Never repeat the same format twice.\n\nReturn ONLY valid JSON: {"ideas": [{"title":"","description":"","viralPotential":"high|medium|low","tags":["tag1"]}]}`
+        },
       ],
     });
     const content = completion.choices[0]?.message?.content ?? "{}";
@@ -113,12 +154,12 @@ router.post("/ai/generate-ideas", async (req, res) => {
     res.json({ ideas, creditsUsed: 10 });
   } catch (err) {
     req.log.error({ err }, "Error generating ideas");
-    res.status(500).json({ error: "Failed to generate ideas" });
+    res.status(500).json({ error: "Failed to generate ideas. Please try again." });
   }
 });
 
 // ── Workflow ──────────────────────────────────────────────────
-router.post("/ai/generate-workflow", async (req, res) => {
+router.post("/ai/generate-workflow", aiGenerationLimiter, async (req, res) => {
   const parsed = GenerateWorkflowBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { topic, niche, platform, tone, duration = "medium" } = parsed.data;
@@ -130,8 +171,14 @@ router.post("/ai/generate-workflow", async (req, res) => {
       model: "gpt-5.4",
       max_completion_tokens: 4096,
       messages: [
-        { role: "system", content: `You are a complete content creation system generating a full creator workflow from idea to publish-ready content, optimized for ${platform}.` },
-        { role: "user", content: `Generate a complete creator workflow for:\nTopic: ${topic}\nNiche: ${niche || "general"}\nPlatform: ${platform}\nTone: ${tone || "authentic and engaging"}\nDuration: ${durationMap[duration]}\n\nGenerate: refined idea, attention-grabbing hook, optimized title, full script with pacing, strong CTA, social caption, 10-15 hashtags.\n\nReturn ONLY JSON: {"idea":"","hook":"","title":"","script":"","cta":"","caption":"","hashtags":["#tag1"]}` },
+        {
+          role: "system",
+          content: `You are a complete AI content production system — combining the strategic mind of a top content agency, the hook-writing instincts of a viral creator, the narrative craft of a screenwriter, and the distribution intelligence of a platform algorithm expert. You produce fully integrated, publish-ready content packages where every element is coherent, intentional, and strategically connected. The idea informs the hook. The hook informs the title. The title informs the script. The script informs the caption. Everything works as one unified piece of content, not loosely connected outputs. Platform: ${platform}.`
+        },
+        {
+          role: "user",
+          content: `Generate a complete, publish-ready content package for:\nTopic: ${topic}\nNiche: ${niche || "general"}\nPlatform: ${platform}\nTone: ${tone || "authentic and engaging"}\nTarget duration: ${durationMap[duration]}\n\nDeliver each element at elite quality:\n- idea: The refined, specific angle (not the raw topic — the exact content angle that makes this piece unique)\n- hook: First 1-2 sentences — immediate psychological grip, no intro\n- title: Platform-optimized, curiosity-driving, specific\n- script: Full spoken script with pacing markers, pattern interrupts, and emotional beats — sounds human, not AI\n- cta: One clear, compelling call to action that feels earned by the content\n- caption: Platform-native caption with storytelling hook, value delivery, and CTA — formatted correctly for ${platform}\n- hashtags: Array of 12-15 strategically mixed hashtags (broad reach + niche authority + trending)\n\nAll elements must be internally consistent — the same specific angle, the same tone, the same story.\n\nReturn ONLY valid JSON: {"idea":"","hook":"","title":"","script":"","cta":"","caption":"","hashtags":["#tag1"]}`
+        },
       ],
     });
     const content = completion.choices[0]?.message?.content ?? "{}";
@@ -140,12 +187,12 @@ router.post("/ai/generate-workflow", async (req, res) => {
     res.json({ ...result, creditsUsed: 40 });
   } catch (err) {
     req.log.error({ err }, "Error generating workflow");
-    res.status(500).json({ error: "Failed to generate workflow" });
+    res.status(500).json({ error: "Failed to generate workflow. Please try again." });
   }
 });
 
 // ── Captions ──────────────────────────────────────────────────
-router.post("/ai/generate-captions", async (req, res) => {
+router.post("/ai/generate-captions", aiGenerationLimiter, async (req, res) => {
   const { topic, platform = "instagram", tone = "engaging", niche, count = 4 } = req.body as {
     topic: string; platform?: string; tone?: string; niche?: string; count?: number;
   };
@@ -156,8 +203,8 @@ router.post("/ai/generate-captions", async (req, res) => {
       model: "gpt-5.4",
       max_completion_tokens: 2048,
       messages: [
-        { role: "system", content: `You are an expert social media copywriter specializing in ${platform} captions that drive engagement, saves, and shares. You understand platform culture, storytelling, and conversion psychology.` },
-        { role: "user", content: `Write ${count} powerful ${platform} captions for content about:\nTopic: ${topic}\nNiche: ${niche || "general"}\nTone: ${tone}\n\nCaption requirements:\n- Hook in the first line (no emoji opening unless it's part of the hook)\n- Storytelling or value delivery in the middle\n- Strong CTA at the end\n- Platform-native formatting\n- Vary the approach for each caption\n\nReturn ONLY JSON: {"captions": ["caption1", "caption2", ...]}` },
+        { role: "system", content: `You are an elite social media copywriter who has driven millions in engagement across ${platform}. You write captions that stop the scroll with the first line, hold attention through authentic storytelling or sharp insight, and close with a CTA that feels like a natural invitation — not a demand. You understand that the best captions on ${platform} feel like they came from a real person having a real conversation, not a content marketer filling a template. You never open with an emoji. You never use hollow phrases like "So excited to share" or "Check this out". Every caption you write has a distinct voice and angle.` },
+        { role: "user", content: `Write ${count} high-performing ${platform} captions for content about:\nTopic: ${topic}\nNiche: ${niche || "general"}\nTone: ${tone}\n\nEach caption must:\n- Open with a line that earns the "more" tap — a story fragment, a bold claim, a relatable frustration, or a surprising insight\n- Deliver genuine value or emotional resonance in the body\n- Close with a CTA that matches the platform's culture (conversational question for engagement, soft directive for saves, direct ask for shares)\n- Be formatted correctly for ${platform} (line breaks, length, structure)\n- Have a completely different approach and opening style from the others\n\nReturn ONLY valid JSON: {"captions": ["caption1", "caption2", ...]}` },
       ],
     });
     const content = completion.choices[0]?.message?.content ?? "{}";
@@ -171,7 +218,7 @@ router.post("/ai/generate-captions", async (req, res) => {
 });
 
 // ── Hashtags ──────────────────────────────────────────────────
-router.post("/ai/generate-hashtags", async (req, res) => {
+router.post("/ai/generate-hashtags", aiGenerationLimiter, async (req, res) => {
   const { topic, platform = "instagram", niche, count = 30 } = req.body as {
     topic: string; platform?: string; niche?: string; count?: number;
   };
@@ -197,7 +244,7 @@ router.post("/ai/generate-hashtags", async (req, res) => {
 });
 
 // ── Thumbnail Prompt ──────────────────────────────────────────
-router.post("/ai/generate-thumbnail", async (req, res) => {
+router.post("/ai/generate-thumbnail", aiGenerationLimiter, async (req, res) => {
   const { topic, platform = "youtube", style = "bold", niche } = req.body as {
     topic: string; platform?: string; style?: string; niche?: string;
   };
@@ -223,7 +270,7 @@ router.post("/ai/generate-thumbnail", async (req, res) => {
 });
 
 // ── Content Repurposer ────────────────────────────────────────
-router.post("/ai/repurpose-content", async (req, res) => {
+router.post("/ai/repurpose-content", aiGenerationLimiter, async (req, res) => {
   const { content: inputContent, sourceFormat = "youtube", targetPlatforms = ["twitter", "instagram", "linkedin"], topic } = req.body as {
     content: string; sourceFormat?: string; targetPlatforms?: string[]; topic?: string;
   };
@@ -249,7 +296,7 @@ router.post("/ai/repurpose-content", async (req, res) => {
 });
 
 // ── YouTube Description ───────────────────────────────────────
-router.post("/ai/generate-description", async (req, res) => {
+router.post("/ai/generate-description", aiGenerationLimiter, async (req, res) => {
   const { title, topic, niche, keywords, tone = "professional" } = req.body as {
     title: string; topic?: string; niche?: string; keywords?: string; tone?: string;
   };
@@ -275,7 +322,7 @@ router.post("/ai/generate-description", async (req, res) => {
 });
 
 // ── Ad Copy ───────────────────────────────────────────────────
-router.post("/ai/generate-adcopy", async (req, res) => {
+router.post("/ai/generate-adcopy", aiGenerationLimiter, async (req, res) => {
   const { product, audience, platform = "facebook", goal = "conversions", tone = "persuasive", count = 3 } = req.body as {
     product: string; audience?: string; platform?: string; goal?: string; tone?: string; count?: number;
   };
@@ -301,7 +348,7 @@ router.post("/ai/generate-adcopy", async (req, res) => {
 });
 
 // ── Brand Voice ───────────────────────────────────────────────
-router.post("/ai/generate-brand-voice", async (req, res) => {
+router.post("/ai/generate-brand-voice", aiGenerationLimiter, async (req, res) => {
   const { description, examples, niche, audience } = req.body as {
     description: string; examples?: string; niche?: string; audience?: string;
   };
@@ -327,7 +374,7 @@ router.post("/ai/generate-brand-voice", async (req, res) => {
 });
 
 // ── AI Image Generation ───────────────────────────────────────
-router.post("/ai/generate-image", async (req, res) => {
+router.post("/ai/generate-image", aiGenerationLimiter, async (req, res) => {
   const { prompt, style = "photorealistic", aspectRatio = "16:9", quality = "standard" } = req.body as {
     prompt: string; style?: string; aspectRatio?: string; quality?: string;
   };
