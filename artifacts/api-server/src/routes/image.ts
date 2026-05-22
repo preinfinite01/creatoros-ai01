@@ -4,20 +4,25 @@ const imageRouter = Router();
 
 imageRouter.post("/image", async (req, res) => {
   try {
-    const { prompt, style, aspectRatio } = req.body as { prompt?: string; style?: string; aspectRatio?: string };
+    const { prompt, style, aspectRatio } = req.body;
 
     if (!prompt) {
-      res.status(400).send("prompt is required");
-      return;
+      return res.status(400).json({ error: "prompt is required" });
     }
 
     const apiKey = process.env.HUGGINGFACE_API_KEY;
+
     if (!apiKey) {
-      res.status(500).send("HUGGINGFACE_API_KEY is not configured");
-      return;
+      return res.status(500).json({
+        error: "HUGGINGFACE_API_KEY is not configured",
+      });
     }
 
-    const fullPrompt = [prompt, style ? `${style} style` : null, aspectRatio ? `aspect ratio ${aspectRatio}` : null]
+    const fullPrompt = [
+      prompt,
+      style ? `${style} style` : "",
+      aspectRatio ? `aspect ratio ${aspectRatio}` : "",
+    ]
       .filter(Boolean)
       .join(", ");
 
@@ -35,18 +40,21 @@ imageRouter.post("/image", async (req, res) => {
 
     if (!hfRes.ok) {
       const text = await hfRes.text();
-      res.status(hfRes.status).send(text);
-      return;
+      return res.status(hfRes.status).json({
+        error: text,
+      });
     }
 
     const arrayBuffer = await hfRes.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    res.setHeader("Content-Type", hfRes.headers.get("content-type") ?? "image/jpeg");
-    res.setHeader("Content-Length", buffer.length);
-    res.send(buffer);
+    res.setHeader("Content-Type", hfRes.headers.get("content-type") || "image/jpeg");
+
+    return res.send(buffer);
   } catch (err) {
-    res.status(500).send(String(err));
+    return res.status(500).json({
+      error: String(err),
+    });
   }
 });
 
