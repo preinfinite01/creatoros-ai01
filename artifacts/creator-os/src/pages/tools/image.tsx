@@ -40,7 +40,7 @@ export default function ImageGen() {
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState("photorealistic");
   const [aspectRatio, setAspectRatio] = useState("16:9");
-  const [imageData, setImageData] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loadingMsg, setLoadingMsg] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [generationCount, setGenerationCount] = useState(0);
@@ -59,25 +59,29 @@ export default function ImageGen() {
       return;
     }
     setIsLoading(true);
-    setImageData(null);
+    setImageUrl(null);
     setLoadingMsg(0);
 
-    // Cycle through loading messages every 3s
     const msgInterval = setInterval(() => {
       setLoadingMsg((m) => (m + 1) % LOADING_MESSAGES.length);
     }, 3000);
 
     try {
-      const res = await fetch("/api/ai/generate-image", {
+      const res = await fetch("/api/image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, style, aspectRatio }),
       });
-      const data = await res.json() as { b64_json?: string; error?: string };
-      if (!res.ok || data.error) throw new Error(data.error ?? "Generation failed");
-      if (!data.b64_json) throw new Error("No image data returned");
 
-      setImageData(data.b64_json);
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
+
+      const blob = await res.blob();
+
+      const url = URL.createObjectURL(blob);
+      setImageUrl(url);
       setGenerationCount((c) => c + 1);
       addXp(20);
       toast({ title: "✨ Image generated successfully!" });
@@ -90,12 +94,10 @@ export default function ImageGen() {
     }
   };
 
-  const imgSrc = imageData ? `data:image/png;base64,${imageData}` : null;
-
   const handleDownload = () => {
-    if (!imgSrc) return;
+    if (!imageUrl) return;
     const a = document.createElement("a");
-    a.href = imgSrc;
+    a.href = imageUrl;
     a.download = `creatorOS-image-${Date.now()}.png`;
     a.click();
   };
@@ -112,7 +114,7 @@ export default function ImageGen() {
         <div>
           <h1 className="text-2xl font-black tracking-tight">AI Image Generator</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Generate stunning visuals, thumbnails, and social media graphics. Powered by GPT-Image-1.
+            Generate stunning visuals, thumbnails, and social media graphics. Powered by Hugging Face.
           </p>
         </div>
         {generationCount > 0 && (
@@ -124,7 +126,6 @@ export default function ImageGen() {
       </div>
 
       <div className="grid lg:grid-cols-5 gap-6">
-        {/* Controls */}
         <Card className="lg:col-span-2 glass p-6 space-y-5 border-white/8 h-fit">
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Image Prompt</Label>
@@ -140,7 +141,6 @@ export default function ImageGen() {
             </p>
           </div>
 
-          {/* Style Presets */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Style Preset</Label>
             <div className="grid grid-cols-3 gap-1.5">
@@ -163,7 +163,6 @@ export default function ImageGen() {
             )}
           </div>
 
-          {/* Aspect Ratio */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aspect Ratio</Label>
             <div className="grid grid-cols-3 gap-2">
@@ -199,7 +198,6 @@ export default function ImageGen() {
           </p>
         </Card>
 
-        {/* Output */}
         <div className="lg:col-span-3">
           <AnimatePresence mode="wait">
             {isLoading && (
@@ -239,7 +237,7 @@ export default function ImageGen() {
               </motion.div>
             )}
 
-            {imgSrc && !isLoading && (
+            {imageUrl && !isLoading && (
               <motion.div
                 key="result"
                 initial={{ opacity: 0, scale: 0.97 }}
@@ -248,11 +246,10 @@ export default function ImageGen() {
               >
                 <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/40 group">
                   <img
-                    src={imgSrc}
+                    src={imageUrl}
                     alt="AI generated visual"
                     className="w-full object-cover"
                   />
-                  {/* Overlay on hover */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
                   <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button
@@ -260,13 +257,13 @@ export default function ImageGen() {
                       onClick={handleDownload}
                       className="bg-black/70 backdrop-blur-md hover:bg-black/90 border border-white/15 text-white text-xs h-8 shadow-xl"
                     >
-                      <Download className="w-3.5 h-3.5 mr-1.5" /> Download PNG
+                      <Download className="w-3.5 h-3.5 mr-1.5" /> Download
                     </Button>
                   </div>
                   <div className="absolute bottom-3 left-3">
                     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[10px] font-semibold text-white/70 border border-white/10">
                       <Sparkles className="w-2.5 h-2.5 text-fuchsia-400" />
-                      GPT-Image-1 · {selectedStyle?.label} · {selectedRatio?.label}
+                      Hugging Face · {selectedStyle?.label} · {selectedRatio?.label}
                     </div>
                   </div>
                 </div>
@@ -289,7 +286,7 @@ export default function ImageGen() {
               </motion.div>
             )}
 
-            {!imgSrc && !isLoading && (
+            {!imageUrl && !isLoading && (
               <motion.div
                 key="empty"
                 initial={{ opacity: 0 }}
